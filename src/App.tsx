@@ -34,8 +34,7 @@ export function App() {
       ]);
       setStatus({ kind: "ready", data: buildReport(user, companies) });
     } catch (e) {
-      const msg = e instanceof ApiError ? `API ${e.status}: ${e.message}` : (e as Error).message;
-      setStatus({ kind: "error", message: msg });
+      setStatus({ kind: "error", message: friendlyError(e) });
     }
   }, []);
 
@@ -94,6 +93,25 @@ function TopBar() {
       </div>
     </header>
   );
+}
+
+function friendlyError(e: unknown): string {
+  if (e instanceof ApiError) {
+    if (e.status === 503 || e.status === 502 || e.status === 504) {
+      return "The War Era API is down right now. Try again in a few minutes.";
+    }
+    if (e.status === 429) {
+      return "Rate-limited by the War Era API. Wait a minute and try again.";
+    }
+    if (e.status === 404) {
+      return "User not found. Check the spelling and try again.";
+    }
+    return `War Era API returned ${e.status}. Try again, or report it if it keeps happening.`;
+  }
+  if (e instanceof TypeError && e.message.includes("fetch")) {
+    return "Couldn't reach the War Era API. Check your connection or try again in a minute.";
+  }
+  return (e as Error).message ?? "Unknown error.";
 }
 
 function ErrorBox({ message, onRetry }: { message: string; onRetry: () => void }) {
