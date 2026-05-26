@@ -32,7 +32,7 @@ export function UsernameForm({ onSubmit, busy }: { onSubmit: (name: string) => v
           autoCapitalize="off"
           autoCorrect="off"
           spellCheck={false}
-          placeholder="lundgren"
+          placeholder="Username"
           className="w-full rounded border border-border bg-surface px-4 py-3 text-base text-text outline-none focus:border-accent"
         />
         <button
