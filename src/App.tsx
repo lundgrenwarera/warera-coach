@@ -71,11 +71,18 @@ export function App() {
         {status.kind === "ready" && <PlanReport data={status.data} onReset={reset} onRefresh={refresh} />}
       </main>
       <footer className="mt-auto border-t border-border px-4 py-5 text-center text-[11px] text-text-faint">
-        <a href="https://github.com/lundgrenwarera/warera-coach" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-          open source on github
+        provided to you by{" "}
+        <a href="https://app.warera.io/user/6a146313f0de273b8b1c27f6" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+          Lundbergs Enterprises
         </a>
         {" · "}
-        not affiliated with War Era
+        <a href="https://app.warera.io/article/6a1567a9b59f030545377a9b" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+          tip
+        </a>
+        {" · "}
+        <a href="https://github.com/lundgrenwarera/warera-coach" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
+          source
+        </a>
       </footer>
     </div>
   );
