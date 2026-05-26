@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { UsernameForm } from "./components/UsernameForm";
 import { PlanReport, type ReportData } from "./components/PlanReport";
 import { pruneOldEntries } from "./lib/daily";
+import { clearUsernameFromUrl, readUsernameFromUrl, setUsernameInUrl } from "./lib/routing";
 import { ApiError, fetchCompanies, fetchUser, searchUserByName, type WareraUser, type Company } from "./lib/warera-api";
 import {
   auditSkills, coinPlan, dailyChecklist, nextFactoryAction,
@@ -18,12 +19,9 @@ type Status =
 export function App() {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
-  useEffect(() => {
-    pruneOldEntries();
-  }, []);
-
-  async function lookup(username: string) {
+  const lookup = useCallback(async (username: string, opts?: { updateUrl?: boolean }) => {
     setStatus({ kind: "loading", username });
+    if (opts?.updateUrl !== false) setUsernameInUrl(username);
     try {
       const userId = await searchUserByName(username);
       if (!userId) {
@@ -39,10 +37,25 @@ export function App() {
       const msg = e instanceof ApiError ? `API ${e.status}: ${e.message}` : (e as Error).message;
       setStatus({ kind: "error", message: msg });
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    pruneOldEntries();
+    const fromUrl = readUsernameFromUrl();
+    if (fromUrl) lookup(fromUrl, { updateUrl: false });
+  }, [lookup]);
 
   function reset() {
     setStatus({ kind: "idle" });
+    clearUsernameFromUrl();
+  }
+
+  function refresh() {
+    if (status.kind === "ready") {
+      lookup(status.data.username, { updateUrl: false });
+    } else if (status.kind === "loading") {
+      lookup(status.username, { updateUrl: false });
+    }
   }
 
   return (
@@ -56,7 +69,7 @@ export function App() {
             <ErrorBox message={status.message} onRetry={reset} />
           </div>
         )}
-        {status.kind === "ready" && <PlanReport data={status.data} onReset={reset} />}
+        {status.kind === "ready" && <PlanReport data={status.data} onReset={reset} onRefresh={refresh} />}
       </main>
       <footer className="mt-auto border-t border-border px-4 py-5 text-center text-[11px] text-text-faint">
         <a href="https://github.com/lundgrenwarera/warera-coach" target="_blank" rel="noopener noreferrer" className="hover:text-accent">

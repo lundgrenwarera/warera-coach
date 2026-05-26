@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>War Era Coach</title>
+    <script>
+      (function () {
+        var segments = location.pathname.split("/").filter(Boolean);
+        var base = segments[0] || "warera-coach";
+        var rest = segments.slice(1).join("/");
+        var search = location.search || "";
+        if (rest) {
+          var sep = search ? "&" : "?";
+          search = search + sep + "redirect=" + encodeURIComponent(rest);
+        }
+        location.replace("/" + base + "/" + search + location.hash);
+      })();
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -16,7 +16,7 @@ export type ReportData = {
   coin: CoinPriority[];
 };
 
-export function PlanReport({ data, onReset }: { data: ReportData; onReset: () => void }) {
+export function PlanReport({ data, onReset, onRefresh }: { data: ReportData; onReset: () => void; onRefresh: () => void }) {
   const heroAction = data.daily[0];
   const restActions = data.daily.slice(1);
   const upcomingLevels = LEVEL_PLAN.filter((p) => p.level > data.audit.level).slice(0, 3);
@@ -30,13 +30,23 @@ export function PlanReport({ data, onReset }: { data: ReportData; onReset: () =>
             {data.username} · level {data.audit.level}
           </h1>
         </div>
-        <button
-          type="button"
-          onClick={onReset}
-          className="rounded border border-border bg-surface px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-text-muted hover:border-accent hover:text-accent"
-        >
-          ← New search
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onRefresh}
+            className="rounded border border-border bg-surface px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-text-muted hover:border-accent hover:text-accent"
+            title="Re-fetch your profile"
+          >
+            ↻ Refresh
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            className="rounded border border-border bg-surface px-3 py-1.5 font-mono text-[11px] uppercase tracking-wider text-text-muted hover:border-accent hover:text-accent"
+          >
+            ← New search
+          </button>
+        </div>
       </header>
 
       {data.audit.level > 15 ? (
