@@ -54,6 +54,6 @@ export function auditSkills(args: {
     totalSP: args.totalSP,
     target,
     rows,
-    matches: rows.every((r) => r.status === "ok"),
+    matches: rows.every((r) => r.status !== "behind"),
   };
 }

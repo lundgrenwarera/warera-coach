@@ -79,11 +79,13 @@ export function PlanReport({ data, onReset, onRefresh }: { data: ReportData; onR
 }
 
 function StatusStrip({ audit, factoryCount }: { audit: SkillAudit; factoryCount: number }) {
+  const companiesRow = audit.rows.find((r) => r.key === "companies");
+  const actualCap = (companiesRow?.current ?? 0) + 2;
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
       <Kpi label="Level" value={String(audit.level)} sub={`${audit.totalSP} SP earned`} />
       <Kpi label="Unspent skill points" value={String(audit.availableSP)} sub={unspentSub(audit)} />
-      <Kpi label="Factories" value={String(factoryCount)} sub={`${audit.target.companies + 2} cap`} />
+      <Kpi label="Factories" value={String(factoryCount)} sub={`${actualCap} cap`} />
       <Kpi
         label="Build status"
         value={audit.matches ? "OPTIMAL" : "OFF"}
@@ -196,7 +198,7 @@ function labelForStatus(status: SkillAuditRow["status"]): string {
 function badgeClass(status: SkillAuditRow["status"]): string {
   if (status === "ok") return "border-ok/40 bg-ok/10 text-ok";
   if (status === "behind") return "border-warn/40 bg-warn/10 text-warn";
-  return "border-loss/40 bg-loss/10 text-loss";
+  return "border-border bg-surface text-text-muted";
 }
 
 function FactoriesCard({ factories, factoryAction }: { factories: Factory[]; factoryAction: FactoryAction }) {
