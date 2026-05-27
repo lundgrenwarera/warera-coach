@@ -73,7 +73,7 @@ export function App() {
       <footer className="mt-auto border-t border-border px-4 py-5 text-center text-[11px] text-text-faint">
         provided to you by{" "}
         <a href="https://app.warera.io/user/6a146313f0de273b8b1c27f6" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
-          Lundbergs Technology AB
+          Lundgrens Technology AB
         </a>
         {" · "}
         <a href="https://app.warera.io/article/6a1567a9b59f030545377a9b" target="_blank" rel="noopener noreferrer" className="hover:text-accent">
