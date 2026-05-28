@@ -11,22 +11,32 @@ export type LevelTarget = {
 
 export const SP_PER_LEVEL = 4;
 
+/**
+ * SP order per BuhDeuce's PERFECT ECONOMIC GUIDE:
+ *   Production 1, Energy 1, Production 2, Energy 2, Production 3, Energy 3,
+ *   Production 4, Production 5, Energy 4, Entrepreneurship 1, Entrepreneurship 2,
+ *   Production 6, Energy 5, Production 7, Energy 6.
+ *
+ * Companies SP is spent in parallel ("every time you reach 2/2, 3/3 etc → invest
+ * in company SP") at natural banking points so the factory build chart
+ * (companies 1-6 at AE4) is actually achievable in the L1-15 window.
+ */
 export const LEVEL_PLAN: LevelTarget[] = [
-  { level: 1,  entrepreneurship: 0, energy: 0, production: 1, companies: 0, newAction: "Production → 1. Convert your starter factory to limestone as your very first move." },
-  { level: 2,  entrepreneurship: 0, energy: 1, production: 2, companies: 0, newAction: "Energy → 1, Production → 2. Keep limestone producing; stockpile output." },
-  { level: 3,  entrepreneurship: 0, energy: 2, production: 3, companies: 0, newAction: "Energy → 2, Production → 3. Once you have ~50 concrete value (10 limestone = 1 concrete), build factory #2 as concrete." },
-  { level: 4,  entrepreneurship: 1, energy: 2, production: 4, companies: 0, newAction: "Entrepreneurship → 1, Production → 4. Both factories should be running." },
-  { level: 5,  entrepreneurship: 2, energy: 3, production: 4, companies: 0, newAction: "Eco foundation set: Ent 2, Energy 3, Production 4." },
-  { level: 6,  entrepreneurship: 2, energy: 4, production: 4, companies: 0, newAction: "Energy → 4. More wage hours per day." },
-  { level: 7,  entrepreneurship: 2, energy: 5, production: 4, companies: 0, newAction: "Energy → 5." },
-  { level: 8,  entrepreneurship: 2, energy: 5, production: 4, companies: 0, newAction: "Bank the 4 SP. Level 9 needs them for the energy jump." },
-  { level: 9,  entrepreneurship: 2, energy: 6, production: 4, companies: 0, newAction: "Energy → 6 (banked + new = 8 SP, 2 left over)." },
-  { level: 10, entrepreneurship: 3, energy: 6, production: 4, companies: 1, newAction: "Entrepreneurship → 3, Companies → 1 (factory cap = 3)." },
-  { level: 11, entrepreneurship: 4, energy: 6, production: 4, companies: 1, newAction: "Entrepreneurship → 4. Cap your self-work intake." },
-  { level: 12, entrepreneurship: 4, energy: 6, production: 4, companies: 1, newAction: "Bank 4 SP for the level 13 energy push." },
-  { level: 13, entrepreneurship: 4, energy: 7, production: 4, companies: 1, newAction: "Energy → 7." },
-  { level: 14, entrepreneurship: 4, energy: 7, production: 5, companies: 1, newAction: "Production → 5." },
-  { level: 15, entrepreneurship: 4, energy: 7, production: 5, companies: 2, newAction: "Companies → 2 (factory cap = 4). End of the prescriptive plan." },
+  { level: 1,  entrepreneurship: 0, energy: 1, production: 2, companies: 0, newAction: "Production → 2, Energy → 1. Convert the starter factory to limestone — it's free to self-produce and feeds the concrete chain." },
+  { level: 2,  entrepreneurship: 0, energy: 2, production: 2, companies: 0, newAction: "Energy → 2. Bank 2 SP for level 3's Production + Energy double-up." },
+  { level: 3,  entrepreneurship: 0, energy: 3, production: 3, companies: 0, newAction: "Production → 3, Energy → 3. Once you've stockpiled enough concrete, build factory #2 as concrete." },
+  { level: 4,  entrepreneurship: 0, energy: 3, production: 4, companies: 0, newAction: "Production → 4. Push factories 1-2 toward AE3 each." },
+  { level: 5,  entrepreneurship: 0, energy: 3, production: 4, companies: 1, newAction: "Companies → 1 (factory cap 3). Build factory #3 as iron. Bank 3 SP toward Production 5 next level." },
+  { level: 6,  entrepreneurship: 0, energy: 3, production: 5, companies: 1, newAction: "Production → 5 (uses banked + new SP)." },
+  { level: 7,  entrepreneurship: 1, energy: 4, production: 5, companies: 1, newAction: "Energy → 4, Entrepreneurship → 1. Self-work hours come online." },
+  { level: 8,  entrepreneurship: 2, energy: 4, production: 5, companies: 1, newAction: "Entrepreneurship → 2. Bank 3 SP toward Production 6 next level." },
+  { level: 9,  entrepreneurship: 2, energy: 4, production: 6, companies: 1, newAction: "Production → 6." },
+  { level: 10, entrepreneurship: 2, energy: 5, production: 6, companies: 1, newAction: "Energy → 5. By now companies 1-3 should be at AE4 — start factory #4 as steel once Companies skill allows." },
+  { level: 11, entrepreneurship: 2, energy: 5, production: 6, companies: 1, newAction: "Bank all 4 SP. Level 12 needs Production 7 in one shot (7 SP)." },
+  { level: 12, entrepreneurship: 2, energy: 5, production: 7, companies: 1, newAction: "Production → 7. Top of the production curve." },
+  { level: 13, entrepreneurship: 2, energy: 5, production: 7, companies: 1, newAction: "Bank all 4 SP. Level 14 closes Energy → 6 + Companies → 2." },
+  { level: 14, entrepreneurship: 2, energy: 6, production: 7, companies: 2, newAction: "Energy → 6, Companies → 2 (factory cap 4). Eco core skills locked in. Build factory #4 = steel if not already." },
+  { level: 15, entrepreneurship: 2, energy: 6, production: 7, companies: 3, newAction: "Companies → 3 (factory cap 5). Build factory #5. End of the prescriptive plan — from level 16 push Companies → 4 for a 6th factory, then drag the whole set to AE5/AE6." },
 ];
 
 export function targetForLevel(level: number): LevelTarget {

@@ -30,7 +30,7 @@ function pushSkillAction(out: DailyAction[], audit: SkillAudit) {
       id: "spend-sp",
       title: `Spend ${behind.spToReach} SP: ${behind.label} → ${behind.target}`,
       detail: `You have ${audit.availableSP} SP available. The level ${audit.target.level} target wants ${behind.label} at ${behind.target}.`,
-      source: SOURCES.finnishGuide,
+      source: SOURCES.buhDeuce,
     });
     return;
   }
@@ -39,7 +39,7 @@ function pushSkillAction(out: DailyAction[], audit: SkillAudit) {
       id: "hold-sp",
       title: `Hold all ${audit.availableSP} points. Do not spend.`,
       detail: explainBank(audit.level, audit.availableSP),
-      source: SOURCES.finnishGuide,
+      source: SOURCES.buhDeuce,
     });
     return;
   }
@@ -48,7 +48,7 @@ function pushSkillAction(out: DailyAction[], audit: SkillAudit) {
       id: "bank-sp",
       title: `Bank ${audit.availableSP} SP for the next level`,
       detail: explainBankNextLevel(audit.target.level, audit.level),
-      source: SOURCES.finnishGuide,
+      source: SOURCES.buhDeuce,
     });
   }
 }
@@ -59,21 +59,21 @@ function pushFactoryAction(out: DailyAction[], action: FactoryAction) {
       id: `convert-${action.id}`,
       title: `Convert ${action.name}: ${action.currentItem} → ${action.targetItem}`,
       detail: action.reason,
-      source: SOURCES.beginner101,
+      source: SOURCES.buhDeuce,
     });
   } else if (action.kind === "upgrade") {
     out.push({
       id: `upgrade-${action.id}`,
       title: `Upgrade ${action.name}: AE${action.currentAE} → ${action.targetAE}`,
       detail: action.reason,
-      source: SOURCES.devGuide,
+      source: SOURCES.buhDeuce,
     });
   } else if (action.kind === "build") {
     out.push({
       id: "build-factory",
       title: `Build factory: ${action.itemCode}`,
       detail: `${action.reason} Estimated cost: ~${action.estimatedCost} coin in concrete.`,
-      source: SOURCES.devGuide,
+      source: SOURCES.buhDeuce,
     });
   }
 }
@@ -85,6 +85,14 @@ function pushMissionsAndRituals(out: DailyAction[], level: number) {
       title: "Burn through any starter missions you still have",
       detail: "There are 14 one-shot starter missions. Completing 10 of them triggers the biggest XP and coin lump-sum reward you can get. Do these before anything optional.",
       source: SOURCES.ultimateNew,
+    });
+  }
+  if (level < 15) {
+    out.push({
+      id: "sell-starter-resources",
+      title: "Sell starter bullets and food for cash",
+      detail: "BuhDeuce: your damage is neglectful at this stage, so combat resources are dead weight. Liquidate them and pour the coin into the next factory build or AE upgrade.",
+      source: SOURCES.buhDeuce,
     });
   }
   out.push({
@@ -106,10 +114,22 @@ function pushMissionsAndRituals(out: DailyAction[], level: number) {
     source: SOURCES.ultimateNew,
   });
   out.push({
-    id: "daily-case",
-    title: "Claim the free daily case, then sell it",
-    detail: "Below level 15, the case's market price usually beats the expected item/scrap value of opening it (avg ~14.67 scrap per case). Sell, spend the coin on factory upgrades.",
-    source: SOURCES.devGuide,
+    id: "daily-case-loot",
+    title: "Open the free daily case → scrap green/blue, sell purple+",
+    detail: "BuhDeuce loot-box rule: open the box, scrap green and blue items for crafting scrap, sell purple and above to market for instant cash. Equipment isn't useful yet — cash now compounds.",
+    source: SOURCES.buhDeuce,
+  });
+  out.push({
+    id: "factory-placement",
+    title: "Park each factory in the best bonus + safest region",
+    detail: "BuhDeuce: set each company in the highest production-bonus region you can reach, and prefer the country capital for occupation safety. Output gain is permanent until you move it.",
+    source: SOURCES.buhDeuce,
+  });
+  out.push({
+    id: "storage-watch",
+    title: "Upgrade any storage that's full before anything else",
+    detail: "BuhDeuce: a full storage means a factory is wasting production. Storage upgrades jump the queue ahead of AE upgrades when output is capped.",
+    source: SOURCES.buhDeuce,
   });
 }
 

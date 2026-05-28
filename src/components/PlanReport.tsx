@@ -2,7 +2,7 @@ import type {
   CoinPriority, DailyAction, EcoSkillKey, Factory, FactoryAction, LevelTarget,
   SkillAudit, SkillAuditRow,
 } from "../lib/plan";
-import { isBankLevel, LEVEL_PLAN, SOURCES, spDelta } from "../lib/plan";
+import { factoryTargetAE, isBankLevel, LEVEL_PLAN, SOURCES, spDelta } from "../lib/plan";
 import { cn } from "../lib/cn";
 import { Panel } from "./Panel";
 import { DailyChecklist } from "./DailyChecklist";
@@ -127,14 +127,18 @@ function PastPlanBanner({ level }: { level: number }) {
     <section className="tactical-panel rounded-sm border-accent/30 bg-bg-subtle p-4 sm:p-5">
       <div className="label text-accent">Level {level} · past the plan</div>
       <p className="mt-2 text-sm leading-relaxed text-text">
-        You're past level 15. The prescriptive table stops here because by this point you probably know what you're doing already, and the optimal path branches into too many viable choices to call.
+        You're past level 15. BuhDeuce's chart says by level 20 you should have companies 1-6 at AE5+ and be ready for war (or push AE6 if you'll disable factories for combat).
       </p>
       <p className="mt-2 text-sm leading-relaxed text-text-muted">
-        For SP allocation from here on out, the most useful reference is the{" "}
+        Next moves from the{" "}
+        <a href={SOURCES.buhDeuce.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
+          PERFECT ECONOMIC GUIDE
+        </a>
+        : push Companies → 4 to unlock the 6th factory, drag all six to AE5 (then AE6 if staying eco), and only then prep equipment for war. For fine-grained SP allocation past level 15, cross-reference the{" "}
         <a href={SOURCES.ecoDistribution.url} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
-          Eco skill point distribution guide
-        </a>{" "}
-        which has lookup tables for any total SP. The daily checklist below still applies.
+          eco SP distribution tables
+        </a>
+        . The daily checklist below still applies.
       </p>
     </section>
   );
@@ -202,6 +206,7 @@ function badgeClass(status: SkillAuditRow["status"]): string {
 }
 
 function FactoriesCard({ factories, factoryAction }: { factories: Factory[]; factoryAction: FactoryAction }) {
+  const targetAE = factoryTargetAE(factories);
   return (
     <Panel
       title={`Factories · ${factories.length}`}
@@ -210,13 +215,13 @@ function FactoriesCard({ factories, factoryAction }: { factories: Factory[]; fac
       <ul className="space-y-1.5">
         {factories.length === 0 && (
           <li className="rounded border border-border bg-surface/40 p-3 text-xs text-text-muted">
-            No factories yet. The dev guide says: convert your starter factory to concrete first, then build limestone, steel, iron in that order.
+            No factories yet. BuhDeuce: convert your starter to limestone first, then build concrete, iron, steel in that order.
           </li>
         )}
         {[...factories]
           .sort((a, b) => a.automatedEngine - b.automatedEngine)
           .map((f) => (
-            <FactoryRow key={f.id} factory={f} action={factoryAction} />
+            <FactoryRow key={f.id} factory={f} action={factoryAction} targetAE={targetAE} />
           ))}
         {factoryAction.kind === "build" && (
           <li className="rounded border border-accent/40 bg-accent/5 px-3 py-2">
@@ -236,11 +241,10 @@ function factoryActionHeadline(action: FactoryAction): string {
   return "All factories at target";
 }
 
-function FactoryRow({ factory, action }: { factory: Factory; action: FactoryAction }) {
+function FactoryRow({ factory, action, targetAE }: { factory: Factory; action: FactoryAction; targetAE: number }) {
   const isTopUpgrade = action.kind === "upgrade" && action.id === factory.id;
   const isConvert = action.kind === "convert" && action.id === factory.id;
   const isTop = isTopUpgrade || isConvert;
-  const targetAE = factoryAeTarget(factory);
   const atTarget = factory.automatedEngine >= targetAE;
   return (
     <li className={cn("rounded px-3 py-2 border", [
@@ -265,10 +269,6 @@ function FactoryRow({ factory, action }: { factory: Factory; action: FactoryActi
       )}
     </li>
   );
-}
-
-function factoryAeTarget(_factory: Factory): number {
-  return 4;
 }
 
 function CoinCard({ coin }: { coin: CoinPriority[] }) {

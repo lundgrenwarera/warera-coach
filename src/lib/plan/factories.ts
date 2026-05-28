@@ -30,29 +30,60 @@ export function factoryTargetCount(companiesSkillLevel: number): number {
   return Math.min(6, COMPANIES_BASE_CAP + companiesSkillLevel);
 }
 
-type Phase = { tier: number; maxCount: number };
+/**
+ * BuhDeuce build order (PERFECT ECONOMIC GUIDE):
+ *   1. Build factory 1 → AE3
+ *   2. Build factory 2 → AE3
+ *   3. Build factory 3, then push companies 1-3 → AE4 together
+ *   4. Build factory 4 → AE4
+ *   5. Build factory 5 → AE4
+ *   6. Build factory 6 → AE4
+ *   7. Push companies 1-6 → AE5
+ *   8. (war path) push companies 1-6 → AE6
+ *
+ * Each new factory uses the canonical chain: limestone → concrete → iron → steel,
+ * then grain/bread for staying-eco.
+ */
+export function factoryTargetAE(factories: Factory[]): number {
+  const count = factories.length;
+  if (count === 0) return 3;
 
-const PHASES: Phase[] = [
-  { tier: 3, maxCount: 3 },
-  { tier: 4, maxCount: 6 },
-  { tier: 5, maxCount: 6 },
-];
+  const allAtLeast = (n: number) => factories.every((f) => f.automatedEngine >= n);
 
-function currentPhase(factories: Factory[]): Phase {
-  for (const phase of PHASES) {
-    const allAtTier = factories.every((f) => f.automatedEngine >= phase.tier);
-    const filled = factories.length >= phase.maxCount;
-    if (!allAtTier || !filled) return phase;
+  if (count <= 2) return 3;
+
+  if (count === 3) {
+    if (!allAtLeast(3)) return 3;
+    return 4;
   }
-  return PHASES[PHASES.length - 1];
+
+  if (count <= 6) {
+    return 4;
+  }
+
+  if (!allAtLeast(5)) return 5;
+  return 6;
 }
 
 export function nextFactoryAction(args: {
   factories: Factory[];
   companiesSkillLevel: number;
 }): FactoryAction {
-  if (args.factories.length === 1) {
-    const sole = args.factories[0];
+  const factories = args.factories;
+  const count = factories.length;
+  const factoryCap = factoryTargetCount(args.companiesSkillLevel);
+
+  if (count === 0) {
+    return {
+      kind: "build",
+      itemCode: CANONICAL_FACTORY_ORDER[0],
+      reason: `Start of the eco plan. Limestone first — you can self-produce it for free and chain it into concrete, the build currency for every future factory.`,
+      estimatedCost: 50,
+    };
+  }
+
+  if (count === 1) {
+    const sole = factories[0];
     if (!CANONICAL_CORE_SET.has(sole.itemCode)) {
       return {
         kind: "convert",
@@ -60,73 +91,127 @@ export function nextFactoryAction(args: {
         name: sole.name,
         currentItem: sole.itemCode,
         targetItem: STARTER_CONVERSION_TARGET,
-        reason: `Your starter factory produces ${sole.itemCode}, which sits outside the canonical chain. Convert to ${STARTER_CONVERSION_TARGET}: you can self-produce it for free, then craft it into concrete (the build currency) for every future factory.`,
+        reason: `Your starter produces ${sole.itemCode}, outside the canonical chain. Convert to ${STARTER_CONVERSION_TARGET} — you can self-produce it for free, then craft it into concrete for every future factory.`,
       };
     }
   }
 
-  const phase = currentPhase(args.factories);
-  const targetCount = Math.min(factoryTargetCount(args.companiesSkillLevel), phase.maxCount);
+  const sortedByAE = [...factories].sort((a, b) => a.automatedEngine - b.automatedEngine);
+  const lowest = sortedByAE[0];
+  const lowestAE = lowest.automatedEngine;
+  const allAtLeast = (n: number) => factories.every((f) => f.automatedEngine >= n);
 
-  const underBuilt = args.factories
-    .filter((f) => f.automatedEngine < phase.tier)
-    .sort((a, b) => a.automatedEngine - b.automatedEngine);
-  if (underBuilt.length > 0 && args.factories.length >= targetCount) {
-    const f = underBuilt[0];
-    return {
-      kind: "upgrade",
-      id: f.id,
-      name: f.name,
-      itemCode: f.itemCode,
-      currentAE: f.automatedEngine,
-      targetAE: phase.tier,
-      reason: phase.tier === 3
-        ? `Push it to AE${phase.tier} before you build the next factory. Beginner's Guide 101 says AE3 first, build #${args.factories.length + 1}, then push together. Keeps your chain closing fast.`
-        : `Push all factories to AE${phase.tier} before adding the next slot. Old factories compound longer; new ones start strong.`,
-    };
-  }
-
-  if (underBuilt.length > 0 && args.factories.length < targetCount) {
-    const lowest = underBuilt[0];
-    if (lowest.automatedEngine < phase.tier - (phase.tier === 3 ? 1 : 0)) {
-      return {
-        kind: "upgrade",
-        id: lowest.id,
-        name: lowest.name,
-        itemCode: lowest.itemCode,
-        currentAE: lowest.automatedEngine,
-        targetAE: phase.tier,
-        reason: `Bring it up to AE${phase.tier} before you add another factory. Your chain isn't producing enough yet.`,
-      };
+  if (count <= 2) {
+    if (lowestAE < 3) {
+      return upgradeAction(lowest, 3, count, "preAE3");
     }
+    return buildOrWait(factories, count, factoryCap, 3);
   }
 
-  if (args.factories.length < targetCount) {
-    const owned = new Set(args.factories.map((f) => f.itemCode));
-    const next = CANONICAL_FACTORY_ORDER.find((c) => !owned.has(c)) ?? "bread";
+  if (count === 3) {
+    if (!allAtLeast(4)) {
+      return upgradeAction(lowest, 4, count, "pushAE4");
+    }
+    return buildOrWait(factories, count, factoryCap, 4);
+  }
+
+  if (count <= 5) {
+    if (lowestAE < 4) {
+      return upgradeAction(lowest, 4, count, "individualAE4");
+    }
+    return buildOrWait(factories, count, factoryCap, 4);
+  }
+
+  if (count === 6) {
+    if (lowestAE < 4) return upgradeAction(lowest, 4, count, "individualAE4");
+    if (lowestAE < 5) return upgradeAction(lowest, 5, count, "pushAE5");
+    if (lowestAE < 6) return upgradeAction(lowest, 6, count, "pushAE6");
     return {
-      kind: "build",
-      itemCode: next,
-      reason: `Lowest factory already at AE${phase.tier - 1}+. Build ${next} now to close the chain; you'll push everyone to AE${phase.tier} together after.`,
-      estimatedCost: 50 * (args.factories.length + 1),
+      kind: "wait",
+      reason: `All 6 factories at AE6. Eco core build complete — past the prescriptive plan. Staying eco? Build factories 7-10 next.`,
     };
   }
 
-  if (underBuilt.length > 0) {
-    const f = underBuilt[0];
-    return {
-      kind: "upgrade",
-      id: f.id,
-      name: f.name,
-      itemCode: f.itemCode,
-      currentAE: f.automatedEngine,
-      targetAE: phase.tier,
-      reason: `All ${args.factories.length} slots filled. Push to AE${phase.tier} across the board, then revisit when company-limit unlocks more slots.`,
-    };
-  }
-
+  if (lowestAE < 5) return upgradeAction(lowest, 5, count, "ecoAE5");
+  if (lowestAE < 6) return upgradeAction(lowest, 6, count, "ecoAE6");
   return {
     kind: "wait",
-    reason: `${args.factories.length} factories at AE${phase.tier}. Wait for the next level-up to lift the company-limit skill and unlock another factory slot.`,
+    reason: `${count} factories at AE6+. Past the prescriptive plan — see the full-eco section of the guide for AE7 push.`,
+  };
+}
+
+type UpgradePhase = "preAE3" | "pushAE4" | "individualAE4" | "pushAE5" | "pushAE6" | "ecoAE5" | "ecoAE6";
+
+function upgradeAction(f: Factory, targetAE: number, count: number, phase: UpgradePhase): FactoryAction {
+  const reason = upgradeReason(targetAE, count, phase);
+  return {
+    kind: "upgrade",
+    id: f.id,
+    name: f.name,
+    itemCode: f.itemCode,
+    currentAE: f.automatedEngine,
+    targetAE,
+    reason,
+  };
+}
+
+function upgradeReason(_targetAE: number, count: number, phase: UpgradePhase): string {
+  if (phase === "preAE3") {
+    const nextSlot = count + 1;
+    return `Push it to AE3 before you build factory #${nextSlot}. BuhDeuce's plan: each of the first three factories hits AE3 individually, then push 1-3 to AE4 together.`;
+  }
+  if (phase === "pushAE4") {
+    return `All 3 factories built. Push the lowest to AE4 — drag the whole set 1-3 to AE4 together before building factory #4.`;
+  }
+  if (phase === "individualAE4") {
+    const nextSlot = count + 1;
+    if (count < 6) {
+      return `Bring it to AE4 before building factory #${nextSlot}. From factory 4 onward, each new slot goes to AE4 individually before the next build.`;
+    }
+    return `Bring it to AE4 so all six factories are level. Next phase: push the whole set to AE5.`;
+  }
+  if (phase === "pushAE5") {
+    return `All 6 factories at AE4. Push the lowest to AE5 — bring the whole set to AE5 together. If you're heading to war, AE6 after this.`;
+  }
+  if (phase === "pushAE6") {
+    return `War-prep push: drag the set to AE6. AE6 is the ceiling before you start disabling factories for combat.`;
+  }
+  if (phase === "ecoAE5") {
+    return `Staying-eco track: push toward AE5 across the full set before upgrading to AE6.`;
+  }
+  return `Staying-eco track: push toward AE6 — then build 11+12 and lift everyone to AE7.`;
+}
+
+function buildOrWait(
+  factories: Factory[],
+  count: number,
+  factoryCap: number,
+  prevPhaseAE: number,
+): FactoryAction {
+  if (count < factoryCap) {
+    return buildAction(factories, count, prevPhaseAE);
+  }
+  return waitForCompaniesSkill(count + 1, factoryCap);
+}
+
+function buildAction(existing: Factory[], count: number, prevPhaseAE: number): FactoryAction {
+  const owned = new Set(existing.map((f) => f.itemCode));
+  const next = CANONICAL_FACTORY_ORDER.find((c) => !owned.has(c)) ?? "bread";
+  const slot = count + 1;
+  const upgradeNote = slot <= 3
+    ? `Bring it to AE3 next, then build #${Math.min(slot + 1, 3)}.`
+    : `Bring it to AE4 before the next build.`;
+  return {
+    kind: "build",
+    itemCode: next,
+    reason: `Slot #${slot}. Build ${next} — next in the canonical chain (limestone → concrete, iron → steel closes the dependency). ${upgradeNote} Previous factories already at AE${prevPhaseAE}+.`,
+    estimatedCost: 50 * (count + 1),
+  };
+}
+
+function waitForCompaniesSkill(nextSlot: number, currentCap: number): FactoryAction {
+  return {
+    kind: "wait",
+    reason: `Factory cap is ${currentCap}. Spend SP on the Companies skill to unlock slot #${nextSlot}, then build the next factory.`,
   };
 }
