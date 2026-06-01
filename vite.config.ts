@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 export default defineConfig({
+  base: "/warera-coach/",
   plugins: [react(), tailwindcss()],
   // react-draggable (via react-grid-layout) reads process.env.DRAGGABLE_DEBUG at
   // drag start, which throws in the browser where process is undefined. Replace it
